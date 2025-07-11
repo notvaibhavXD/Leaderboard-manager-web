@@ -3,50 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Leaderboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <title>UST Leaderboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     body {
-      background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
-      min-height: 100vh;
+      background: linear-gradient(135deg, #000000, #0a0a0a);
       overflow-y: auto;
     }
     .glass {
       background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .glow {
       text-shadow: 0 0 10px #facc15, 0 0 20px #facc15;
     }
-    .admin-panel {
-      transition: transform 0.3s ease;
-      transform: translateY(100%);
+    button {
+      transition: transform 0.2s ease;
     }
-    .admin-panel.open {
-      transform: translateY(0);
-    }
-    .snowflake {
-      position: fixed;
-      top: -10px;
-      width: 10px;
-      height: 10px;
-      background: white;
-      border-radius: 50%;
-      opacity: 0.8;
-      animation: fall linear infinite;
-    }
-    @keyframes fall {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(100vh); }
+    button:hover {
+      transform: scale(1.05);
     }
   </style>
 </head>
-<body class="text-white flex flex-col items-center py-10">
+<body class="text-white min-h-screen flex flex-col items-center py-10">
+  <h1 class="text-4xl font-bold mb-8 glow">UST Leaderboard</h1>
 
-  <h1 class="text-5xl font-bold mb-8 glow">Leaderboard</h1>
-
-  <div class="w-full max-w-xl glass rounded-2xl p-6 shadow-xl mb-20">
+  <div class="w-full max-w-2xl glass rounded-2xl p-6 shadow-2xl">
     <table class="w-full table-auto">
       <thead>
         <tr class="text-yellow-400 text-lg border-b border-yellow-500">
@@ -59,15 +42,11 @@
     </table>
   </div>
 
-  <button onclick="toggleAdmin()" class="fixed bottom-5 right-5 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-5 py-3 rounded-full shadow-lg">
-    Add Kill
-  </button>
-
-  <div id="adminPanel" class="fixed bottom-0 right-0 w-full md:w-96 glass p-6 rounded-t-xl admin-panel">
+  <div class="mt-12 w-full max-w-md glass p-6 rounded-xl">
     <h2 class="text-2xl font-bold mb-4">Admin Panel 🔒</h2>
-    <input id="password" type="password" placeholder="Password" class="w-full mb-3 px-4 py-2 rounded bg-gray-700" />
-    <input id="player" type="text" placeholder="Player Name" class="w-full mb-3 px-4 py-2 rounded bg-gray-700" />
-    <input id="kills" type="number" placeholder="Kills" class="w-full mb-4 px-4 py-2 rounded bg-gray-700" />
+    <input id="password" type="password" placeholder="Password" class="w-full mb-3 px-4 py-2 rounded bg-gray-800">
+    <input id="player" type="text" placeholder="Player Name" class="w-full mb-3 px-4 py-2 rounded bg-gray-800">
+    <input id="kills" type="number" placeholder="Kills" class="w-full mb-4 px-4 py-2 rounded bg-gray-800">
     <div class="flex justify-between">
       <button onclick="addKills()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Add</button>
       <button onclick="removeKills()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">Remove</button>
@@ -75,21 +54,9 @@
     </div>
   </div>
 
-  <!-- Snow JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
-    for (let i = 0; i < 50; i++) {
-      const snow = document.createElement("div");
-      snow.className = "snowflake";
-      snow.style.left = Math.random() * 100 + "vw";
-      snow.style.animationDuration = 3 + Math.random() * 5 + "s";
-      snow.style.width = snow.style.height = Math.random() * 4 + 2 + "px";
-      document.body.appendChild(snow);
-    }
-  </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script>
-    const BIN_URL = "https://api.jsonbin.io/v3/b/6870d8c0afef824ba9f959c9";
+    const JSONBIN_API = "https://api.jsonbin.io/v3/b/6870d8c0afef824ba9f959c9";
     const JSONBIN_KEY = "$2a$10$TJAJuHEeejCnDrsPrkwyVuyJEKBwcnwOKvQW/8i7AW5F0nt455gg2";
     const PASSWORD = "astralsecretpassword";
 
@@ -97,29 +64,30 @@
 
     async function fetchLeaderboard() {
       try {
-        const res = await axios.get(BIN_URL + "/latest", {
-          headers: { "X-Master-Key": JSONBIN_KEY }
+        const res = await fetch(JSONBIN_API, {
+          headers: {
+            "X-Master-Key": JSONBIN_KEY
+          }
         });
-        leaderboard = res.data.record || {};
+        const json = await res.json();
+        leaderboard = json.record || {};
         renderLeaderboard();
       } catch (err) {
-        console.error("Failed to fetch leaderboard", err);
+        console.error("Fetch failed:", err);
       }
     }
 
     async function saveLeaderboard() {
-      try {
-        await axios.put(BIN_URL, leaderboard, {
-          headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": JSONBIN_KEY,
-            "X-Bin-Versioning": "false"
-          }
-        });
-        fetchLeaderboard();
-      } catch (err) {
-        console.error("Failed to save leaderboard", err);
-      }
+      await fetch(JSONBIN_API, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": JSONBIN_KEY,
+          "X-Bin-Versioning": false
+        },
+        body: JSON.stringify(leaderboard)
+      });
+      renderLeaderboard();
     }
 
     function getInputs() {
@@ -141,34 +109,33 @@
       leaderboard[name] = (leaderboard[name] || 0) + kills;
       await saveLeaderboard();
     }
-async function removeKills() {
-  if (!checkPassword()) return alert("❌ Wrong password");
-  const { name, kills } = getInputs();
-  if (!name || isNaN(kills)) return alert("Invalid input");
 
-  const newKills = Math.max(0, (leaderboard[name] || 0) - kills);
-  if (newKills === 0) {
-    delete leaderboard[name];
-  } else {
-    leaderboard[name] = newKills;
-  }
+    async function removeKills() {
+      if (!checkPassword()) return alert("❌ Wrong password");
+      const { name, kills } = getInputs();
+      if (!name || isNaN(kills)) return alert("Invalid input");
 
-  await saveLeaderboard();
-}
+      const newKills = Math.max(0, (leaderboard[name] || 0) - kills);
+      if (newKills === 0) {
+        delete leaderboard[name];
+      } else {
+        leaderboard[name] = newKills;
+      }
+      await saveLeaderboard();
+    }
 
-async function setKills() {
-  if (!checkPassword()) return alert("❌ Wrong password");
-  const { name, kills } = getInputs();
-  if (!name || isNaN(kills)) return alert("Invalid input");
+    async function setKills() {
+      if (!checkPassword()) return alert("❌ Wrong password");
+      const { name, kills } = getInputs();
+      if (!name || isNaN(kills)) return alert("Invalid input");
 
-  if (kills <= 0) {
-    delete leaderboard[name];
-  } else {
-    leaderboard[name] = kills;
-  }
-
-  await saveLeaderboard();
-}
+      if (kills <= 0) {
+        delete leaderboard[name];
+      } else {
+        leaderboard[name] = kills;
+      }
+      await saveLeaderboard();
+    }
 
     function renderLeaderboard() {
       const tbody = document.getElementById("leaderboard");
@@ -177,17 +144,12 @@ async function setKills() {
       sorted.forEach(([name, kills], i) => {
         tbody.innerHTML += `
           <tr class="border-b border-gray-700">
-            <td class="py-2 font-semibold">${String(i + 1).padStart(2, "0")}</td>
+            <td class="py-2 font-semibold">${i + 1}</td>
             <td class="py-2">${name}</td>
             <td class="py-2 text-yellow-300">${kills.toLocaleString()}</td>
           </tr>
         `;
       });
-    }
-
-    function toggleAdmin() {
-      const panel = document.getElementById("adminPanel");
-      panel.classList.toggle("open");
     }
 
     fetchLeaderboard();
