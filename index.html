@@ -141,24 +141,34 @@
       leaderboard[name] = (leaderboard[name] || 0) + kills;
       await saveLeaderboard();
     }
+async function removeKills() {
+  if (!checkPassword()) return alert("❌ Wrong password");
+  const { name, kills } = getInputs();
+  if (!name || isNaN(kills)) return alert("Invalid input");
 
-    async function removeKills() {
-      if (!checkPassword()) return alert("❌ Wrong password");
-      const { name, kills } = getInputs();
-      if (!name || isNaN(kills)) return alert("Invalid input");
+  const newKills = Math.max(0, (leaderboard[name] || 0) - kills);
+  if (newKills === 0) {
+    delete leaderboard[name];
+  } else {
+    leaderboard[name] = newKills;
+  }
 
-      leaderboard[name] = Math.max(0, (leaderboard[name] || 0) - kills);
-      await saveLeaderboard();
-    }
+  await saveLeaderboard();
+}
 
-    async function setKills() {
-      if (!checkPassword()) return alert("❌ Wrong password");
-      const { name, kills } = getInputs();
-      if (!name || isNaN(kills)) return alert("Invalid input");
+async function setKills() {
+  if (!checkPassword()) return alert("❌ Wrong password");
+  const { name, kills } = getInputs();
+  if (!name || isNaN(kills)) return alert("Invalid input");
 
-      leaderboard[name] = kills;
-      await saveLeaderboard();
-    }
+  if (kills <= 0) {
+    delete leaderboard[name];
+  } else {
+    leaderboard[name] = kills;
+  }
+
+  await saveLeaderboard();
+}
 
     function renderLeaderboard() {
       const tbody = document.getElementById("leaderboard");
