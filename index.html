@@ -53,39 +53,74 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
+    const SUPABASE_URL = 'https://hvdhnvvfwhvovhanwabo.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2ZGhudnZmd2h2b3ZoYW53YWJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMjYxMjIsImV4cCI6MjA2NzgwMjEyMn0.CMrUYxR8ODQVgc3gOx44s2Lx13JngCdgtrrViiet1oI';
     const PASSWORD = "astralsecretpassword";
-    const BIN_ID = "6870d8c0afef824ba9f959c9";
-    const API_KEY = "$2a$10$TJAJuHEeejCnDrsPrkwyVuyJEKBwcnwOKvQW/8i7AW5F0nt455gg2";
-    const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-    let leaderboard = {};
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function fetchLeaderboard() {
-      const res = await fetch(BASE_URL + "/latest", {
-        headers: {
-          "X-Master-Key": API_KEY
-        }
-      });
-      const json = await res.json();
-      leaderboard = json.record || {};
+      const { data, error } = await supabase
+        .from('kills')
+        .select('*')
+        .order('kills', { ascending: false });
+
+      if (error) return console.error(error);
+      leaderboard = {};
+      data.forEach(player => leaderboard[player.name] = player.kills);
       renderLeaderboard();
     }
 
-    async function updateLeaderboard() {
-      await fetch(BASE_URL, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Master-Key": API_KEY
-        },
-        body: JSON.stringify(leaderboard)
-      });
+    async function updateKills(name, kills) {
+      await supabase.from('kills').upsert([{ name, kills }]);
+    }
+
+    async function addKills() {
+      if (!checkPassword()) return alert("Wrong password");
+      const { name, kills } = getInputs();
+      if (!name || isNaN(kills)) return alert("Invalid input");
+
+      leaderboard[name] = (leaderboard[name] || 0) + kills;
+      await updateKills(name, leaderboard[name]);
+      fetchLeaderboard();
+    }
+
+    async function removeKills() {
+      if (!checkPassword()) return alert("Wrong password");
+      const { name, kills } = getInputs();
+      if (!name || isNaN(kills)) return alert("Invalid input");
+
+      leaderboard[name] = Math.max(0, (leaderboard[name] || 0) - kills);
+      await updateKills(name, leaderboard[name]);
+      fetchLeaderboard();
+    }
+
+    async function setKills() {
+      if (!checkPassword()) return alert("Wrong password");
+      const { name, kills } = getInputs();
+      if (!name || isNaN(kills)) return alert("Invalid input");
+
+      leaderboard[name] = kills;
+      await updateKills(name, kills);
+      fetchLeaderboard();
+    }
+
+    function getInputs() {
+      return {
+        name: document.getElementById('player').value.trim(),
+        kills: parseInt(document.getElementById('kills').value)
+      };
+    }
+
+    function checkPassword() {
+      return document.getElementById('password').value === PASSWORD;
     }
 
     function renderLeaderboard() {
       const tbody = document.getElementById('leaderboard');
       tbody.innerHTML = "";
-      const sorted = Object.entries(leaderboard).sort((a,b) => b[1]-a[1]);
+      const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
       sorted.forEach(([name, kills], i) => {
         tbody.innerHTML += `
           <tr class="border-b border-gray-700">
@@ -97,45 +132,7 @@
       });
     }
 
-    function checkPassword() {
-      return document.getElementById('password').value === PASSWORD;
-    }
-
-    function getInputs() {
-      return {
-        name: document.getElementById('player').value.trim(),
-        kills: parseInt(document.getElementById('kills').value)
-      };
-    }
-
-    async function addKills() {
-      if (!checkPassword()) return alert("Wrong password");
-      const { name, kills } = getInputs();
-      if (!name || isNaN(kills)) return alert("Invalid input");
-      leaderboard[name] = (leaderboard[name] || 0) + kills;
-      await updateLeaderboard();
-      renderLeaderboard();
-    }
-
-    async function removeKills() {
-      if (!checkPassword()) return alert("Wrong password");
-      const { name, kills } = getInputs();
-      if (!name || isNaN(kills)) return alert("Invalid input");
-      leaderboard[name] = Math.max(0, (leaderboard[name] || 0) - kills);
-      await updateLeaderboard();
-      renderLeaderboard();
-    }
-
-    async function setKills() {
-      if (!checkPassword()) return alert("Wrong password");
-      const { name, kills } = getInputs();
-      if (!name || isNaN(kills)) return alert("Invalid input");
-      leaderboard[name] = kills;
-      await updateLeaderboard();
-      renderLeaderboard();
-    }
-
-    // Initialize
+    let leaderboard = {};
     fetchLeaderboard();
   </script>
 </body>
