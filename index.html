@@ -1,34 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TSB Kill Leaderboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
-      background: linear-gradient(135deg, #1f2937, #111827);
+      background: #000000;
+      overflow-x: hidden;
     }
+
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      width: 10px;
+      height: 10px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: fall linear infinite;
+      z-index: 10;
+      filter: blur(1px);
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh);
+      }
+    }
+
     .glow {
       text-shadow: 0 0 10px #facc15, 0 0 20px #facc15;
     }
+
     .glass {
-      background: rgba(31, 41, 55, 0.6);
+      background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    button {
-      transition: transform 0.2s ease;
+
+    #admin-panel {
+      display: none;
     }
-    button:hover {
-      transform: scale(1.05);
+
+    #admin-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 50;
+    }
+
+    #admin-panel.active {
+      display: block;
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      z-index: 40;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
-<body class="text-white min-h-screen flex flex-col items-center py-10">
+<body class="text-white min-h-screen flex flex-col items-center py-10 relative">
   <h1 class="text-5xl font-bold mb-8 glow">🏆 TSB Kill Leaderboard</h1>
 
-  <div class="w-full max-w-xl glass rounded-2xl p-6 shadow-2xl">
+  <div class="w-full max-w-xl glass rounded-2xl p-6 shadow-2xl z-20">
     <table class="w-full table-auto">
       <thead>
         <tr class="text-yellow-400 text-lg border-b border-yellow-500">
@@ -41,11 +83,15 @@
     </table>
   </div>
 
-  <div class="mt-12 w-full max-w-md glass p-6 rounded-xl">
-    <h2 class="text-2xl font-bold mb-4">Admin Panel 🔒</h2>
-    <input id="password" type="password" placeholder="Password" class="w-full mb-3 px-4 py-2 rounded bg-gray-700">
-    <input id="player" type="text" placeholder="Player Name" class="w-full mb-3 px-4 py-2 rounded bg-gray-700">
-    <input id="kills" type="number" placeholder="Kills" class="w-full mb-4 px-4 py-2 rounded bg-gray-700">
+  <!-- Admin toggle button -->
+  <button id="admin-button" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-full">Admin 🔒</button>
+
+  <!-- Admin popup panel -->
+  <div id="admin-panel" class="glass p-6 rounded-xl w-80">
+    <h2 class="text-2xl font-bold mb-4">Admin Panel</h2>
+    <input id="password" type="password" placeholder="Password" class="w-full mb-3 px-4 py-2 rounded bg-gray-800">
+    <input id="player" type="text" placeholder="Player Name" class="w-full mb-3 px-4 py-2 rounded bg-gray-800">
+    <input id="kills" type="number" placeholder="Kills" class="w-full mb-4 px-4 py-2 rounded bg-gray-800">
     <div class="flex justify-between">
       <button onclick="addKills()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Add</button>
       <button onclick="removeKills()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">Remove</button>
@@ -53,87 +99,105 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <!-- Snow generator -->
   <script>
-    const SUPABASE_URL = 'https://hvdhnvvfwhvovhanwabo.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2ZGhudnZmd2h2b3ZoYW53YWJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMjYxMjIsImV4cCI6MjA2NzgwMjEyMn0.CMrUYxR8ODQVgc3gOx44s2Lx13JngCdgtrrViiet1oI';
-    const PASSWORD = "astralsecretpassword";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    async function fetchLeaderboard() {
-      const { data, error } = await supabase
-        .from('kills')
-        .select('*')
-        .order('kills', { ascending: false });
-
-      if (error) return console.error(error);
-      leaderboard = {};
-      data.forEach(player => leaderboard[player.name] = player.kills);
-      renderLeaderboard();
+    for (let i = 0; i < 100; i++) {
+      const snowflake = document.createElement('div');
+      snowflake.className = 'snowflake';
+      snowflake.style.left = Math.random() * 100 + 'vw';
+      snowflake.style.animationDuration = 2 + Math.random() * 5 + 's';
+      snowflake.style.opacity = Math.random();
+      snowflake.style.fontSize = Math.random() * 10 + 10 + 'px';
+      document.body.appendChild(snowflake);
     }
+  </script>
 
-    async function updateKills(name, kills) {
-      await supabase.from('kills').upsert([{ name, kills }]);
-    }
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const SUPABASE_URL = 'https://hvdhnvvfwhvovhanwabo.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2ZGhudnZmd2h2b3ZoYW53YWJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMjYxMjIsImV4cCI6MjA2NzgwMjEyMn0.CMrUYxR8ODQVgc3gOx44s2Lx13JngCdgtrrViiet1oI';
+      const PASSWORD = "astralsecretpassword";
+      const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function addKills() {
-      if (!checkPassword()) return alert("Wrong password");
-      const { name, kills } = getInputs();
-      if (!name || isNaN(kills)) return alert("Invalid input");
+      let leaderboard = {};
 
-      leaderboard[name] = (leaderboard[name] || 0) + kills;
-      await updateKills(name, leaderboard[name]);
+      async function fetchLeaderboard() {
+        const { data, error } = await supabase
+          .from('kills')
+          .select('*')
+          .order('kills', { ascending: false });
+
+        if (error) return console.error("Error fetching leaderboard:", error);
+        leaderboard = {};
+        data.forEach(player => leaderboard[player.name] = player.kills);
+        renderLeaderboard();
+      }
+
+      async function updateKills(name, kills) {
+        const { error } = await supabase.from('kills').upsert([{ name, kills }]);
+        if (error) console.error("Error updating kills:", error);
+      }
+
+      window.addKills = async function () {
+        if (!checkPassword()) return alert("Wrong password");
+        const { name, kills } = getInputs();
+        if (!name || isNaN(kills)) return alert("Invalid input");
+        leaderboard[name] = (leaderboard[name] || 0) + kills;
+        await updateKills(name, leaderboard[name]);
+        fetchLeaderboard();
+      }
+
+      window.removeKills = async function () {
+        if (!checkPassword()) return alert("Wrong password");
+        const { name, kills } = getInputs();
+        if (!name || isNaN(kills)) return alert("Invalid input");
+        leaderboard[name] = Math.max(0, (leaderboard[name] || 0) - kills);
+        await updateKills(name, leaderboard[name]);
+        fetchLeaderboard();
+      }
+
+      window.setKills = async function () {
+        if (!checkPassword()) return alert("Wrong password");
+        const { name, kills } = getInputs();
+        if (!name || isNaN(kills)) return alert("Invalid input");
+        leaderboard[name] = kills;
+        await updateKills(name, kills);
+        fetchLeaderboard();
+      }
+
+      function getInputs() {
+        return {
+          name: document.getElementById('player').value.trim(),
+          kills: parseInt(document.getElementById('kills').value)
+        };
+      }
+
+      function checkPassword() {
+        return document.getElementById('password').value === PASSWORD;
+      }
+
+      function renderLeaderboard() {
+        const tbody = document.getElementById('leaderboard');
+        tbody.innerHTML = "";
+        const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
+        sorted.forEach(([name, kills], i) => {
+          tbody.innerHTML += `
+            <tr class="border-b border-gray-700">
+              <td class="py-2 font-semibold">${i + 1}</td>
+              <td class="py-2">${name}</td>
+              <td class="py-2 text-yellow-300">${kills}</td>
+            </tr>
+          `;
+        });
+      }
+
       fetchLeaderboard();
-    }
 
-    async function removeKills() {
-      if (!checkPassword()) return alert("Wrong password");
-      const { name, kills } = getInputs();
-      if (!name || isNaN(kills)) return alert("Invalid input");
-
-      leaderboard[name] = Math.max(0, (leaderboard[name] || 0) - kills);
-      await updateKills(name, leaderboard[name]);
-      fetchLeaderboard();
-    }
-
-    async function setKills() {
-      if (!checkPassword()) return alert("Wrong password");
-      const { name, kills } = getInputs();
-      if (!name || isNaN(kills)) return alert("Invalid input");
-
-      leaderboard[name] = kills;
-      await updateKills(name, kills);
-      fetchLeaderboard();
-    }
-
-    function getInputs() {
-      return {
-        name: document.getElementById('player').value.trim(),
-        kills: parseInt(document.getElementById('kills').value)
-      };
-    }
-
-    function checkPassword() {
-      return document.getElementById('password').value === PASSWORD;
-    }
-
-    function renderLeaderboard() {
-      const tbody = document.getElementById('leaderboard');
-      tbody.innerHTML = "";
-      const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
-      sorted.forEach(([name, kills], i) => {
-        tbody.innerHTML += `
-          <tr class="border-b border-gray-700">
-            <td class="py-2 font-semibold">${i + 1}</td>
-            <td class="py-2">${name}</td>
-            <td class="py-2 text-yellow-300">${kills}</td>
-          </tr>
-        `;
+      document.getElementById('admin-button').addEventListener('click', () => {
+        const panel = document.getElementById('admin-panel');
+        panel.classList.toggle('active');
       });
-    }
-
-    let leaderboard = {};
-    fetchLeaderboard();
+    });
   </script>
 </body>
 </html>
