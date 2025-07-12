@@ -250,7 +250,9 @@
 
         const rankCell = document.createElement("td");
         rankCell.className = "py-2 font-semibold";
-        rankCell.textContent = i === 0 ? "👑" : i + 1;
+        const medals = ["🥇", "🥈", "🥉"];
+        rankCell.textContent = medals[i] || i + 1;
+
 
         const nameCell = document.createElement("td");
         nameCell.className = "py-2";
