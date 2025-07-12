@@ -20,7 +20,6 @@
 
     .snowflake {
       position: fixed;
-      top: -10px;
       background: white;
       border-radius: 50%;
       opacity: 0.8;
@@ -63,41 +62,59 @@
   </div>
 
   <script>
-    // Parallax Snow effect
-    let mouseX = 0;
-
-    document.addEventListener('mousemove', (e) => {
+    // Snow with mouse-based parallax effect
+    let mouseX = window.innerWidth / 2;
+    document.addEventListener("mousemove", (e) => {
       mouseX = e.clientX;
     });
 
+    const snowflakes = [];
+
     function createSnowflake() {
-      const snowflake = document.createElement('div');
-      const size = Math.random() * 5 + 2 + 'px';
-      const offsetX = (Math.random() - 0.5) * 40;
+      const snowflake = document.createElement("div");
+      const size = Math.random() * 5 + 2;
+      const startX = Math.random() * window.innerWidth;
+      const offsetX = (Math.random() - 0.5) * 100;
+      const speedY = Math.random() * 1 + 0.5;
+      const driftFactor = Math.random() * 0.05 + 0.02;
 
-      snowflake.classList.add('snowflake');
-      snowflake.style.left = Math.random() * window.innerWidth + 'px';
-      snowflake.style.width = size;
-      snowflake.style.height = size;
-
-      const duration = Math.random() * 5 + 5;
-      const deltaX = (mouseX - window.innerWidth / 2) / 40 + offsetX;
-
-      snowflake.style.animation = `fall ${duration}s linear forwards`;
-      snowflake.animate([
-        { transform: `translate(${0}px, 0px)` },
-        { transform: `translate(${deltaX}px, 100vh)` }
-      ], {
-        duration: duration * 1000,
-        iterations: 1,
-        easing: 'linear'
-      });
+      snowflake.classList.add("snowflake");
+      snowflake.style.width = `${size}px`;
+      snowflake.style.height = `${size}px`;
+      snowflake.style.left = `${startX}px`;
+      snowflake.style.top = `-10px`;
 
       document.body.appendChild(snowflake);
-      setTimeout(() => snowflake.remove(), duration * 1000);
+
+      snowflakes.push({
+        el: snowflake,
+        x: startX,
+        y: -10,
+        size,
+        offsetX,
+        speedY,
+        driftFactor
+      });
+
+      setTimeout(() => {
+        snowflake.remove();
+        const i = snowflakes.findIndex(s => s.el === snowflake);
+        if (i !== -1) snowflakes.splice(i, 1);
+      }, 15000);
+    }
+
+    function animateSnowflakes() {
+      for (const flake of snowflakes) {
+        const dx = (mouseX - window.innerWidth / 2) * flake.driftFactor;
+        flake.x += dx * 0.01;
+        flake.y += flake.speedY;
+        flake.el.style.transform = `translate(${flake.x}px, ${flake.y}px)`;
+      }
+      requestAnimationFrame(animateSnowflakes);
     }
 
     setInterval(createSnowflake, 100);
+    requestAnimationFrame(animateSnowflakes);
 
     const PASSWORD = "MTM5MjgzNjE5OTQyMDUyNjcwMw.Ghbe6J.kQg0L2zrMYJrt7";
     const JSONBIN_URL = "https://api.jsonbin.io/v3/b/6870d8c0afef824ba9f959c9";
