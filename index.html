@@ -22,24 +22,22 @@
   position: fixed;
   background: white;
   border-radius: 50%;
-  opacity: 0.8;
   pointer-events: none;
   z-index: 999;
-  filter: drop-shadow(0 0 4px white);
-  animation: fadeFall 10s linear forwards, spinRotate 6s linear infinite;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 6px white);
+  animation: fadeFall 12s ease-out forwards;
+}
+
+@keyframes fadeFall {
+  0% { opacity: 0.9; }
+  100% { opacity: 0; }
 }
 
 @keyframes spinRotate {
   0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-@keyframes fadeFall {
-  0%   { opacity: 0.9; }
-  80%  { opacity: 0.5; }
-  100% { opacity: 0; }
-}
-
 
 
 #leaderboard tr:hover {
@@ -85,7 +83,7 @@
   </div>
 
   <script>
-    // Snow with mouse-based parallax effect
+ 
     let mouseX = window.innerWidth / 2;
     document.addEventListener("mousemove", (e) => {
       mouseX = e.clientX;
