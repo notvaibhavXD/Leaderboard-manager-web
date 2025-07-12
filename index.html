@@ -143,20 +143,48 @@
       renderLeaderboard();
     }
 
-    function renderLeaderboard() {
-      const tbody = document.getElementById("leaderboard");
-      tbody.innerHTML = "";
-      const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
-      sorted.forEach(([name, kills], i) => {
-        tbody.innerHTML += `
-          <tr class="border-b border-gray-700">
-            <td class="py-2 font-semibold">${i + 1}</td>
-            <td class="py-2">${name}</td>
-            <td class="py-2 text-yellow-300">${kills}</td>
-          </tr>
-        `;
-      });
-    }
+  function renderLeaderboard() {
+  const tbody = document.getElementById("leaderboard");
+  tbody.innerHTML = "";
+
+  const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
+
+  sorted.forEach(([name, kills], i) => {
+    const row = document.createElement("tr");
+    row.className = "border-b border-gray-700";
+
+    const rankCell = document.createElement("td");
+    rankCell.className = "py-2 font-semibold";
+    rankCell.textContent = i === 0 ? "👑" : i + 1;
+
+    const nameCell = document.createElement("td");
+    nameCell.className = "py-2";
+    nameCell.textContent = name;
+
+    const killsCell = document.createElement("td");
+    killsCell.className = "py-2 text-yellow-300";
+    killsCell.textContent = "0";
+
+    // Animate the kills counting up
+    let current = 0;
+    const target = kills;
+    const step = Math.max(1, Math.floor(target / 40));
+    const interval = setInterval(() => {
+      current += step;
+      if (current >= target) {
+        current = target;
+        clearInterval(interval);
+      }
+      killsCell.textContent = current;
+    }, 15);
+
+    row.appendChild(rankCell);
+    row.appendChild(nameCell);
+    row.appendChild(killsCell);
+    tbody.appendChild(row);
+  });
+}
+
 
     function getInputs() {
       return {
