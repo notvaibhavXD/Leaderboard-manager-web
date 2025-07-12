@@ -18,26 +18,15 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-.snowflake {
-  position: fixed;
-  background: white;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 999;
-  opacity: 0.9;
-  filter: drop-shadow(0 0 6px white);
-  animation: fadeFall 12s ease-out forwards;
-}
-
-@keyframes fadeFall {
-  0% { opacity: 0.9; }
-  100% { opacity: 0; }
-}
-
-@keyframes spinRotate {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+  .snowflake {
+    position: fixed;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.8;
+    pointer-events: none;
+    z-index: 999;
+  }
+  
 
 
 #leaderboard tr:hover {
