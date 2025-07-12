@@ -12,33 +12,43 @@
       overflow-y: auto;
     }
 
+    canvas#aurora {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
     .glass {
       background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-  .snowflake {
-    position: fixed;
-    background: white;
-    border-radius: 50%;
-    opacity: 0.8;
-    pointer-events: none;
-    z-index: 999;
-  }
-  
+    .snowflake {
+      position: fixed;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      pointer-events: none;
+      z-index: 999;
+    }
 
-
-#leaderboard tr:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(4px);
-  transition: all 0.3s ease;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
-}
-
+    #leaderboard tr:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(4px);
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+    }
   </style>
 </head>
 <body class="text-white min-h-screen flex flex-col items-center py-10">
+
+  <!-- Aurora canvas background -->
+  <canvas id="aurora"></canvas>
 
   <h1 class="text-4xl font-bold mb-8">All Time Kills Leaderboard</h1>
 
@@ -71,8 +81,83 @@
     </div>
   </div>
 
+  <!-- Aurora script -->
   <script>
- 
+    const canvas = document.getElementById("aurora");
+    const ctx = canvas.getContext("2d");
+
+    let width, height;
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    const auroraColors = [
+      "rgba(139,92,246,0.05)",
+      "rgba(59,130,246,0.05)",
+      "rgba(0,255,213,0.05)",
+    ];
+
+    const blobs = Array.from({ length: 20 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      radius: Math.random() * 200 + 100,
+      dx: (Math.random() - 0.5) * 0.5,
+      dy: (Math.random() - 0.5) * 0.5,
+      color: auroraColors[Math.floor(Math.random() * auroraColors.length)]
+    }));
+
+    function drawAurora() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Connect blobs with glowing lines
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < blobs.length; i++) {
+        for (let j = i + 1; j < blobs.length; j++) {
+          const a = blobs[i];
+          const b = blobs[j];
+          const dist = Math.hypot(a.x - b.x, a.y - b.y);
+          if (dist < 250) {
+            const gradient = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+            gradient.addColorStop(0, a.color);
+            gradient.addColorStop(1, b.color);
+            ctx.strokeStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw glowing blobs
+      blobs.forEach(blob => {
+        const gradient = ctx.createRadialGradient(blob.x, blob.y, 0, blob.x, blob.y, blob.radius);
+        gradient.addColorStop(0, blob.color);
+        gradient.addColorStop(1, "transparent");
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(blob.x, blob.y, blob.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        blob.x += blob.dx;
+        blob.y += blob.dy;
+
+        if (blob.x < 0 || blob.x > width) blob.dx *= -1;
+        if (blob.y < 0 || blob.y > height) blob.dy *= -1;
+      });
+
+      requestAnimationFrame(drawAurora);
+    }
+
+    drawAurora();
+  </script>
+
+  <!-- Your original leaderboard script -->
+  <script>
     let mouseX = window.innerWidth / 2;
     document.addEventListener("mousemove", (e) => {
       mouseX = e.clientX;
@@ -153,48 +238,46 @@
       renderLeaderboard();
     }
 
-  function renderLeaderboard() {
-  const tbody = document.getElementById("leaderboard");
-  tbody.innerHTML = "";
+    function renderLeaderboard() {
+      const tbody = document.getElementById("leaderboard");
+      tbody.innerHTML = "";
 
-  const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
+      const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
 
-  sorted.forEach(([name, kills], i) => {
-    const row = document.createElement("tr");
-    row.className = "border-b border-gray-700";
+      sorted.forEach(([name, kills], i) => {
+        const row = document.createElement("tr");
+        row.className = "border-b border-gray-700";
 
-    const rankCell = document.createElement("td");
-    rankCell.className = "py-2 font-semibold";
-    rankCell.textContent = i === 0 ? "👑" : i + 1;
+        const rankCell = document.createElement("td");
+        rankCell.className = "py-2 font-semibold";
+        rankCell.textContent = i === 0 ? "👑" : i + 1;
 
-    const nameCell = document.createElement("td");
-    nameCell.className = "py-2";
-    nameCell.textContent = name;
+        const nameCell = document.createElement("td");
+        nameCell.className = "py-2";
+        nameCell.textContent = name;
 
-    const killsCell = document.createElement("td");
-    killsCell.className = "py-2 text-yellow-300";
-    killsCell.textContent = "0";
+        const killsCell = document.createElement("td");
+        killsCell.className = "py-2 text-yellow-300";
+        killsCell.textContent = "0";
 
-    // Animate the kills counting up
-    let current = 0;
-    const target = kills;
-    const step = Math.max(1, Math.floor(target / 40));
-    const interval = setInterval(() => {
-      current += step;
-      if (current >= target) {
-        current = target;
-        clearInterval(interval);
-      }
-      killsCell.textContent = current;
-    }, 15);
+        let current = 0;
+        const target = kills;
+        const step = Math.max(1, Math.floor(target / 40));
+        const interval = setInterval(() => {
+          current += step;
+          if (current >= target) {
+            current = target;
+            clearInterval(interval);
+          }
+          killsCell.textContent = current;
+        }, 15);
 
-    row.appendChild(rankCell);
-    row.appendChild(nameCell);
-    row.appendChild(killsCell);
-    tbody.appendChild(row);
-  });
-}
-
+        row.appendChild(rankCell);
+        row.appendChild(nameCell);
+        row.appendChild(killsCell);
+        tbody.appendChild(row);
+      });
+    }
 
     function getInputs() {
       return {
