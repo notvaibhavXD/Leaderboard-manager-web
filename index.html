@@ -18,14 +18,37 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .snowflake {
-      position: fixed;
-      background: white;
-      border-radius: 50%;
-      opacity: 0.8;
-      pointer-events: none;
-      z-index: 999;
-    }
+    /* Enhance snowflakes */
+.snowflake {
+  position: fixed;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 999;
+  animation: spinSnow 6s linear infinite, fadeFall 12s ease-out forwards;
+  filter: drop-shadow(0 0 4px white);
+}
+
+@keyframes spinSnow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeFall {
+  0% { opacity: 0.8; }
+  80% { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+
+/* Leaderboard row hover glow */
+#leaderboard tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
   </style>
 </head>
 <body class="text-white min-h-screen flex flex-col items-center py-10">
