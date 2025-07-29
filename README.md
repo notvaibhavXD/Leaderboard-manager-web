@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
 <head>
 <title>LBM</title>
