@@ -53,7 +53,7 @@
 <body class="text-white min-h-screen flex flex-col items-center py-10">
   <canvas id="aurora"></canvas>
 
-  <!-- Search Icon Top Left -->
+  <!-- Search box top-left -->
   <div class="fixed top-4 left-4 z-10 flex items-center gap-2">
     <input id="searchInput" type="text" placeholder="Search name..." class="px-4 py-2 w-40 sm:w-56 rounded-full bg-white bg-opacity-10 text-white placeholder-gray-300 outline-none" />
     <button onclick="searchPlayer()" class="text-white bg-white bg-opacity-10 p-2 rounded-full hover:bg-opacity-20">
@@ -90,9 +90,135 @@
     </div>
   </div>
 
+  <!-- Restore all original scripts untouched -->
   <script>
-    // Your existing aurora, snowflake, leaderboard, and admin logic remains unchanged
+    const canvas = document.getElementById("aurora");
+    const ctx = canvas.getContext("2d");
 
+    let width, height;
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    const auroraColors = [
+      "rgba(139,92,246,0.05)",
+      "rgba(59,130,246,0.05)",
+      "rgba(0,255,213,0.05)",
+    ];
+
+    const blobs = Array.from({ length: 20 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      radius: Math.random() * 200 + 100,
+      dx: (Math.random() - 0.5) * 0.5,
+      dy: (Math.random() - 0.5) * 0.5,
+      color: auroraColors[Math.floor(Math.random() * auroraColors.length)]
+    }));
+
+    function drawAurora() {
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < blobs.length; i++) {
+        for (let j = i + 1; j < blobs.length; j++) {
+          const a = blobs[i];
+          const b = blobs[j];
+          const dist = Math.hypot(a.x - b.x, a.y - b.y);
+          if (dist < 250) {
+            const gradient = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+            gradient.addColorStop(0, a.color);
+            gradient.addColorStop(1, b.color);
+            ctx.strokeStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      blobs.forEach(blob => {
+        const gradient = ctx.createRadialGradient(blob.x, blob.y, 0, blob.x, blob.y, blob.radius);
+        gradient.addColorStop(0, blob.color);
+        gradient.addColorStop(1, "transparent");
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(blob.x, blob.y, blob.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        blob.x += blob.dx;
+        blob.y += blob.dy;
+
+        if (blob.x < 0 || blob.x > width) blob.dx *= -1;
+        if (blob.y < 0 || blob.y > height) blob.dy *= -1;
+      });
+
+      requestAnimationFrame(drawAurora);
+    }
+
+    drawAurora();
+  </script>
+
+  <script>
+    let mouseX = window.innerWidth / 2;
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX;
+    });
+
+    const snowflakes = [];
+
+    function createSnowflake() {
+      const snowflake = document.createElement("div");
+      const size = Math.random() * 5 + 2;
+      const startX = Math.random() * window.innerWidth;
+      const offsetX = (Math.random() - 0.5) * 100;
+      const speedY = Math.random() * 1 + 0.5;
+      const driftFactor = Math.random() * 0.05 + 0.02;
+
+      snowflake.classList.add("snowflake");
+      snowflake.style.width = `${size}px`;
+      snowflake.style.height = `${size}px`;
+      snowflake.style.left = `${startX}px`;
+      snowflake.style.top = `-10px`;
+
+      document.body.appendChild(snowflake);
+
+      snowflakes.push({
+        el: snowflake,
+        x: startX,
+        y: -10,
+        size,
+        offsetX,
+        speedY,
+        driftFactor
+      });
+
+      setTimeout(() => {
+        snowflake.remove();
+        const i = snowflakes.findIndex(s => s.el === snowflake);
+        if (i !== -1) snowflakes.splice(i, 1);
+      }, 15000);
+    }
+
+    function animateSnowflakes() {
+      for (const flake of snowflakes) {
+        const dx = (mouseX - window.innerWidth / 2) * flake.driftFactor;
+        flake.x += dx * 0.01;
+        flake.y += flake.speedY;
+        flake.el.style.transform = `translate(${flake.x}px, ${flake.y}px)`;
+      }
+      requestAnimationFrame(animateSnowflakes);
+    }
+
+    setInterval(createSnowflake, 100);
+    requestAnimationFrame(animateSnowflakes);
+  </script>
+
+  <script>
     function searchPlayer() {
       const input = document.getElementById("searchInput").value.trim().toLowerCase();
       const rows = document.querySelectorAll("#leaderboard tr");
@@ -113,7 +239,6 @@
       if (!found) alert("Player not found.");
     }
 
-    // Enhanced secret admin typing
     let typed = "";
     document.addEventListener("keydown", (e) => {
       if (e.key === "Backspace") {
