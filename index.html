@@ -49,10 +49,18 @@
 
   <canvas id="aurora"></canvas>
 
-  <!-- Search bar -->
-  <div class="absolute top-6 left-6 glass p-3 rounded-xl shadow-xl">
-    <input id="searchInput" type="text" placeholder="Search name..." class="bg-transparent placeholder-white border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-    <button onclick="searchPlayer()" class="ml-2 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 rounded text-sm">Search</button>
+  <!-- Compact Search Icon + Input -->
+  <div class="absolute top-6 left-6 flex items-center space-x-2">
+    <button id="searchToggle" onclick="toggleSearch()" class="p-2 glass rounded-full hover:ring-2 ring-yellow-400">
+      🔍
+    </button>
+    <input
+      id="searchInput"
+      type="text"
+      placeholder="Search..."
+      class="hidden bg-transparent text-sm placeholder-white border border-white/20 rounded px-3 py-1 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+      onkeydown="if(event.key==='Enter')searchPlayer();"
+    />
   </div>
 
   <h1 class="text-4xl font-bold mb-8">All Time Kills Leaderboard</h1>
@@ -335,22 +343,34 @@
       }
     });
 
-    function searchPlayer() {
-      const input = document.getElementById("searchInput").value.trim().toLowerCase();
-      if (!input) return;
+    function toggleSearch() {
+      const input = document.getElementById("searchInput");
+      input.classList.toggle("hidden");
+      input.focus();
+    }
 
+    function searchPlayer() {
+      const inputRaw = document.getElementById("searchInput").value.trim().toLowerCase();
+      if (!inputRaw) return;
+
+      const input = inputRaw.startsWith("ar_") ? inputRaw : "ar_" + inputRaw;
       const rows = document.querySelectorAll("#leaderboard tr");
       let found = false;
 
-      rows.forEach(row => {
+      for (const row of rows) {
         const nameCell = row.children[1];
-        if (nameCell && nameCell.textContent.toLowerCase() === input) {
+        if (!nameCell) continue;
+
+        const nameText = nameCell.textContent.toLowerCase();
+
+        if (nameText.includes(input)) {
           row.scrollIntoView({ behavior: "smooth", block: "center" });
           row.classList.add("ring-2", "ring-yellow-400");
           setTimeout(() => row.classList.remove("ring-2", "ring-yellow-400"), 1500);
           found = true;
+          break;
         }
-      });
+      }
 
       if (!found) {
         alert("Player not found");
