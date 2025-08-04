@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AR Leaderboard</title>
+  <title>Ast Leaderboard</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
   <style>
     body {
@@ -43,39 +43,20 @@
       transition: all 0.3s ease;
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
     }
-
-    #searchBar {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(6px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 9999px;
-      padding: 6px 12px;
-      display: flex;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    #searchInput {
-      background: transparent;
-      border: none;
-      color: white;
-      outline: none;
-      padding-left: 8px;
-    }
   </style>
 </head>
 <body class="text-white min-h-screen flex flex-col items-center py-10">
+
   <canvas id="aurora"></canvas>
 
-  <div id="searchBar">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-    <input id="searchInput" type="text" placeholder="Search player..." class="ml-2">
+  <!-- Search bar -->
+  <div class="absolute top-6 left-6 glass p-3 rounded-xl shadow-xl">
+    <input id="searchInput" type="text" placeholder="Search name..." class="bg-transparent placeholder-white border border-white/20 rounded px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+    <button onclick="searchPlayer()" class="ml-2 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 rounded text-sm">Search</button>
   </div>
 
   <h1 class="text-4xl font-bold mb-8">All Time Kills Leaderboard</h1>
+
   <div class="w-full max-w-xl glass rounded-2xl p-6 shadow-2xl">
     <table class="w-full table-auto">
       <thead>
@@ -104,6 +85,7 @@
   <script>
     const canvas = document.getElementById("aurora");
     const ctx = canvas.getContext("2d");
+
     let width, height;
     function resizeCanvas() {
       width = canvas.width = window.innerWidth;
@@ -112,7 +94,12 @@
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    const auroraColors = ["rgba(139,92,246,0.05)", "rgba(59,130,246,0.05)", "rgba(0,255,213,0.05)"];
+    const auroraColors = [
+      "rgba(139,92,246,0.05)",
+      "rgba(59,130,246,0.05)",
+      "rgba(0,255,213,0.05)",
+    ];
+
     const blobs = Array.from({ length: 20 }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -147,42 +134,66 @@
         const gradient = ctx.createRadialGradient(blob.x, blob.y, 0, blob.x, blob.y, blob.radius);
         gradient.addColorStop(0, blob.color);
         gradient.addColorStop(1, "transparent");
+
         ctx.fillStyle = gradient;
         ctx.beginPath();
         ctx.arc(blob.x, blob.y, blob.radius, 0, Math.PI * 2);
         ctx.fill();
+
         blob.x += blob.dx;
         blob.y += blob.dy;
+
         if (blob.x < 0 || blob.x > width) blob.dx *= -1;
         if (blob.y < 0 || blob.y > height) blob.dy *= -1;
       });
 
       requestAnimationFrame(drawAurora);
     }
-    drawAurora();
 
+    drawAurora();
+  </script>
+
+  <script>
     let mouseX = window.innerWidth / 2;
-    document.addEventListener("mousemove", (e) => mouseX = e.clientX);
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX;
+    });
+
     const snowflakes = [];
+
     function createSnowflake() {
       const snowflake = document.createElement("div");
       const size = Math.random() * 5 + 2;
       const startX = Math.random() * window.innerWidth;
+      const offsetX = (Math.random() - 0.5) * 100;
       const speedY = Math.random() * 1 + 0.5;
       const driftFactor = Math.random() * 0.05 + 0.02;
+
       snowflake.classList.add("snowflake");
       snowflake.style.width = `${size}px`;
       snowflake.style.height = `${size}px`;
       snowflake.style.left = `${startX}px`;
       snowflake.style.top = `-10px`;
+
       document.body.appendChild(snowflake);
-      snowflakes.push({ el: snowflake, x: startX, y: -10, size, speedY, driftFactor });
+
+      snowflakes.push({
+        el: snowflake,
+        x: startX,
+        y: -10,
+        size,
+        offsetX,
+        speedY,
+        driftFactor
+      });
+
       setTimeout(() => {
         snowflake.remove();
         const i = snowflakes.findIndex(s => s.el === snowflake);
         if (i !== -1) snowflakes.splice(i, 1);
       }, 15000);
     }
+
     function animateSnowflakes() {
       for (const flake of snowflakes) {
         const dx = (mouseX - window.innerWidth / 2) * flake.driftFactor;
@@ -192,62 +203,60 @@
       }
       requestAnimationFrame(animateSnowflakes);
     }
+
     setInterval(createSnowflake, 100);
     requestAnimationFrame(animateSnowflakes);
 
     const PASSWORD = "MTM5MjgzNjE5OTQyMDUyNjcwMw.Ghbe6J.kQg0L2zrMYJrt7";
-    const JSONBIN_URL = "https://api.jsonbin.io/v3/b/6870d8c0afef824ba9f959c9/latest";
+    const JSONBIN_URL = "https://api.jsonbin.io/v3/b/6870d8c0afef824ba9f959c9";
     const API_KEY = "$2a$10$TJAJuHEeejCnDrsPrkwyVuyJEKBwcnwOKvQW/8i7AW5F0nt455gg2";
 
     let leaderboard = {};
+
     async function fetchLeaderboard() {
-      try {
-        const res = await fetch(JSONBIN_URL, {
-          headers: { "X-Master-Key": API_KEY }
-        });
-        const data = await res.json();
-        leaderboard = data.record || data;
-        renderLeaderboard();
-      } catch (err) {
-        console.error("Failed to fetch leaderboard:", err);
-      }
+      const res = await fetch(JSONBIN_URL, {
+        headers: { "X-Master-Key": API_KEY }
+      });
+      const { record } = await res.json();
+      leaderboard = record;
+      renderLeaderboard();
     }
 
     async function saveLeaderboard() {
-      try {
-        await fetch(JSONBIN_URL.replace("/latest", ""), {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Master-Key": API_KEY
-          },
-          body: JSON.stringify(leaderboard)
-        });
-        renderLeaderboard();
-      } catch (err) {
-        console.error("Failed to save leaderboard:", err);
-      }
+      await fetch(JSONBIN_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": API_KEY
+        },
+        body: JSON.stringify(leaderboard)
+      });
+      renderLeaderboard();
     }
 
     function renderLeaderboard() {
       const tbody = document.getElementById("leaderboard");
-      if (!tbody) return;
       tbody.innerHTML = "";
+
       const sorted = Object.entries(leaderboard).sort((a, b) => b[1] - a[1]);
+
       sorted.forEach(([name, kills], i) => {
         const row = document.createElement("tr");
         row.className = "border-b border-gray-700";
+
         const rankCell = document.createElement("td");
         rankCell.className = "py-2 font-semibold";
         const medals = ["🥇", "🥈", "🥉"];
         rankCell.textContent = medals[i] || i + 1;
+
         const nameCell = document.createElement("td");
         nameCell.className = "py-2";
         nameCell.textContent = name;
-        nameCell.id = name.toLowerCase();
+
         const killsCell = document.createElement("td");
         killsCell.className = "py-2 text-yellow-300";
         killsCell.textContent = "0";
+
         let current = 0;
         const target = kills;
         const step = Math.max(1, Math.floor(target / 40));
@@ -259,6 +268,7 @@
           }
           killsCell.textContent = current;
         }, 15);
+
         row.appendChild(rankCell);
         row.appendChild(nameCell);
         row.appendChild(killsCell);
@@ -312,28 +322,40 @@
 
     function toggleAdmin() {
       const panel = document.getElementById("adminPanel");
-      if (panel) panel.classList.toggle("hidden");
+      panel.classList.toggle("hidden");
     }
 
+    let typed = "";
     document.addEventListener("keydown", (e) => {
-      window._typed = (window._typed || "") + e.key;
-      if (window._typed.length > 10) window._typed = window._typed.slice(-10);
-      if (window._typed.toLowerCase().includes("admin")) {
+      typed += e.key;
+      if (typed.length > 10) typed = typed.slice(-10);
+      if (typed.toLowerCase().includes("admin")) {
         toggleAdmin();
-        window._typed = "";
+        typed = "";
       }
     });
 
-    document.getElementById("searchInput").addEventListener("input", (e) => {
-      const value = e.target.value.trim().toLowerCase();
-      if (!value) return;
-      const match = document.getElementById(value);
-      if (match) {
-        match.scrollIntoView({ behavior: "smooth", block: "center" });
-        match.parentElement.classList.add("bg-yellow-900");
-        setTimeout(() => match.parentElement.classList.remove("bg-yellow-900"), 2000);
+    function searchPlayer() {
+      const input = document.getElementById("searchInput").value.trim().toLowerCase();
+      if (!input) return;
+
+      const rows = document.querySelectorAll("#leaderboard tr");
+      let found = false;
+
+      rows.forEach(row => {
+        const nameCell = row.children[1];
+        if (nameCell && nameCell.textContent.toLowerCase() === input) {
+          row.scrollIntoView({ behavior: "smooth", block: "center" });
+          row.classList.add("ring-2", "ring-yellow-400");
+          setTimeout(() => row.classList.remove("ring-2", "ring-yellow-400"), 1500);
+          found = true;
+        }
+      });
+
+      if (!found) {
+        alert("Player not found");
       }
-    });
+    }
 
     fetchLeaderboard();
   </script>
