@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AR Leaderboard</title>
+  <title>Ast Leaderboard</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
   <style>
     body {
@@ -65,10 +65,6 @@
     </table>
   </div>
 
-  <button onclick="toggleAdmin()" class="mt-10 px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg">
-    Open Admin Panel
-  </button>
-
   <div id="adminPanel" class="fixed bottom-4 right-4 max-w-xs glass p-6 rounded-xl hidden">
     <h2 class="text-xl font-bold mb-4">Admin Panel 🔒</h2>
     <input id="password" type="password" placeholder="Password" class="w-full mb-2 px-4 py-2 rounded bg-gray-700">
@@ -81,7 +77,6 @@
     </div>
   </div>
 
-  <!-- Aurora script -->
   <script>
     const canvas = document.getElementById("aurora");
     const ctx = canvas.getContext("2d");
@@ -112,7 +107,6 @@
     function drawAurora() {
       ctx.clearRect(0, 0, width, height);
 
-      // Connect blobs with glowing lines
       ctx.lineWidth = 1.5;
       for (let i = 0; i < blobs.length; i++) {
         for (let j = i + 1; j < blobs.length; j++) {
@@ -132,7 +126,6 @@
         }
       }
 
-      // Draw glowing blobs
       blobs.forEach(blob => {
         const gradient = ctx.createRadialGradient(blob.x, blob.y, 0, blob.x, blob.y, blob.radius);
         gradient.addColorStop(0, blob.color);
@@ -156,7 +149,6 @@
     drawAurora();
   </script>
 
-  <!-- Your original leaderboard script -->
   <script>
     let mouseX = window.innerWidth / 2;
     document.addEventListener("mousemove", (e) => {
@@ -253,7 +245,6 @@
         const medals = ["🥇", "🥈", "🥉"];
         rankCell.textContent = medals[i] || i + 1;
 
-
         const nameCell = document.createElement("td");
         nameCell.className = "py-2";
         nameCell.textContent = name;
@@ -329,6 +320,17 @@
       const panel = document.getElementById("adminPanel");
       panel.classList.toggle("hidden");
     }
+
+    // Secret key trigger
+    let typed = "";
+    document.addEventListener("keydown", (e) => {
+      typed += e.key;
+      if (typed.length > 10) typed = typed.slice(-10);
+      if (typed.toLowerCase().includes("admin")) {
+        toggleAdmin();
+        typed = "";
+      }
+    });
 
     fetchLeaderboard();
   </script>
